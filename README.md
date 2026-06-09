@@ -8,9 +8,7 @@ Advisor: Pai-Chi Li
 
 ## Overview
 
-This project proposes a non-contact lie detection system that extracts physiological signals from video alone — no wires, no sensors, no physical contact. Heart rate (via rPPG) and eye blink patterns (via OpenCV) are measured remotely from webcam footage, then fed into an LSTM-based classifier trained to distinguish truth from deception.
-
-Best model performance: **AUC 0.57 / 0.53** (train/test) using participant baseline data.
+This project proposes a non-contact lie detection system that extracts physiological signals from video alone — no wires, no sensors, no physical contact. Heart rate (via rPPG) and eye blink patterns (via OpenCV) are measured remotely from webcam footage, then fed into an **LSTM**-based classifier trained to distinguish truth from deception.
 
 ---
 
@@ -28,6 +26,7 @@ Traditional polygraphs require physical contact (arm cuffs, finger clips) and ar
 Heart rate is extracted from video by analyzing subtle periodic color changes in facial skin. The green channel carries the strongest plethysmographic signal (hemoglobin absorbs green light most strongly). The pipeline:
 
 ![rPPG Algorithm Framework](figures/fig1_rppg_framework.png)
+
 *Figure 1: Generalized rPPG algorithm framework.*
 
 1. ROI detection, definition, and tracking on the face
@@ -41,6 +40,7 @@ Heart rate is extracted from video by analyzing subtle periodic color changes in
 Blink behavior changes during deception — lying is associated with reduced blink rate during the lie, followed by a compensatory increase afterward. EAR is computed per frame using six facial landmarks:
 
 ![EAR Landmark Sites](figures/fig2_ear_landmarks.png)
+
 *Figure 2: The sites of p1 to p6 used to compute EAR.*
 
 $$EAR = \frac{\|p_2 - p_6\| + \|p_3 - p_5\|}{2\|p_1 - p_4\|}$$
@@ -48,6 +48,7 @@ $$EAR = \frac{\|p_2 - p_6\| + \|p_3 - p_5\|}{2\|p_1 - p_4\|}$$
 EAR stays roughly constant when the eye is open and drops to ~0 during a blink:
 
 ![EAR Blink Trace](figures/fig3_ear_blink_trace.png)
+
 *Figure 3: EAR plotted over video frames. A single blink is visible as the sharp dip.*
 
 ---
@@ -73,6 +74,7 @@ Labels were verified with each participant after the session. Dataset breakdown:
 Each sample pairs a general-question recording with a crime-question recording, stacking HR and EAR series into a (4, 600) array — giving the model a per-subject baseline reference:
 
 ![Data Structure](figures/fig4_data_structure.png)
+
 *Figure 4: Data structure — each crime-related sample is paired with one general-question sample.*
 
 ---
@@ -83,16 +85,18 @@ Each sample pairs a general-question recording with a crime-question recording, 
 Logistic regression with sigmoid output. Achieves ~75% accuracy by predicting "truth" for every sample — revealing that accuracy alone is a misleading metric on this imbalanced dataset. AUC = 0.50.
 
 **LSTM Classifier — without baseline**  
-Architecture: BiLSTM → BiLSTM → LSTM → Dense → Dense → Dense → sigmoid  
+Architecture: **BiLSTM → BiLSTM → LSTM → Dense → Dense → Dense → sigmoid**  
 Loss: weighted binary cross-entropy (inverse class frequency).
 
 ![Model without general questions](figures/fig5_model_without_general.png)
+
 *Figure 5: Workflow of the detector model without general questions.*
 
 **LSTM Classifier — with baseline**  
 Each crime-related sample is paired with a general-question sample, giving the model a per-subject reference. Final prediction aggregates 20 votes — either equally or with **differential weighting** for more easily-verified questions.
 
 ![Model with general questions](figures/fig6_model_with_general.png)
+
 *Figure 6: Workflow of the detector model with general questions.*
 
 ---
@@ -109,11 +113,13 @@ Each crime-related sample is paired with a general-question sample, giving the m
 **AUC distribution across participant splits:**
 
 ![AUC Distribution](figures/fig8_auc_distribution.png)
+
 *Figure 8: Distribution of AUC on training and testing sets (with general questions).*
 
 **Example ROC curves:**
 
 ![ROC Curves](figures/fig9_roc_curves.png)
+
 *Figure 9: Example ROC curves for one participant split.*
 
 ---
